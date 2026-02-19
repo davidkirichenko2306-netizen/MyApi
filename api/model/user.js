@@ -1,8 +1,7 @@
-// models/User.js
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    firebase_uid: {
+    firebaseUid: {          // 🔹 כמו באנדרואיד
         type: String,
         required: true,
         unique: true

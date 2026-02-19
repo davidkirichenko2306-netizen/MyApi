@@ -1,4 +1,3 @@
-// models/FuelingLog.js
 const mongoose = require("mongoose");
 
 const fuelingLogSchema = new mongoose.Schema({

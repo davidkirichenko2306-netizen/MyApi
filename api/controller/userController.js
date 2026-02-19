@@ -1,18 +1,17 @@
-// controllers/userController.js
 const User = require("../model/user");
 
 module.exports = {
 
-    // get or create user by firebase uid
-    getOrCreateUser: async (firebase_uid) => {
-        if (!firebase_uid) {
-            throw new Error("firebase_uid is required");
+    getOrCreateUser: async (firebaseUid) => {
+
+        if (!firebaseUid) {
+            throw new Error("firebaseUid is required");
         }
 
-        let user = await User.findOne({ firebase_uid });
+        let user = await User.findOne({ firebaseUid });
 
         if (!user) {
-            user = new User({ firebase_uid });
+            user = new User({ firebaseUid });
             await user.save();
         }
 
