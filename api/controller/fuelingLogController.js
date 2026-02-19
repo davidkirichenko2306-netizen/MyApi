@@ -1,5 +1,5 @@
 const FuelingLog = require("../model/fuelingLog");
-const userController = require("./userController");
+const User = require("../model/user");
 
 module.exports = {
 
@@ -22,7 +22,14 @@ module.exports = {
                 return res.status(400).json({ message: "firebaseUid is required" });
             }
 
-            const user = await userController.getOrCreateUser(firebaseUid);
+         
+            const user = await User.findOne({ firebaseUid });
+
+            if (!user) {
+                return res.status(404).json({
+                    message: "User does not exist"
+                });
+            }
 
             const fuelingLog = new FuelingLog({
                 user_ref: user._id,
@@ -37,10 +44,10 @@ module.exports = {
 
             await fuelingLog.save();
 
-            res.status(201).json(fuelingLog);
+            return res.status(201).json(fuelingLog);
 
         } catch (err) {
-            res.status(500).json({ message: err.message });
+            return res.status(500).json({ message: err.message });
         }
     },
 
@@ -55,15 +62,22 @@ module.exports = {
                 return res.status(400).json({ message: "firebaseUid is required" });
             }
 
-            const user = await userController.getOrCreateUser(firebaseUid);
+            // ❌ לא יוצרים משתמש
+            const user = await User.findOne({ firebaseUid });
+
+            if (!user) {
+                return res.status(404).json({
+                    message: "User does not exist"
+                });
+            }
 
             const logs = await FuelingLog.find({ user_ref: user._id })
                 .sort({ date: -1 });
 
-            res.json(logs);
+            return res.status(200).json(logs);
 
         } catch (err) {
-            res.status(500).json({ message: err.message });
+            return res.status(500).json({ message: err.message });
         }
     }
 
