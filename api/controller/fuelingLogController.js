@@ -79,6 +79,28 @@ module.exports = {
         } catch (err) {
             return res.status(500).json({ message: err.message });
         }
-    }
+    },
+    // מחיקת לוג תדלוק לפי ID
+deleteFuelingLog: async (req, res) => {
+    try {
+        const { logId } = req.params;
 
+        if (!logId) {
+            return res.status(400).json({ message: "logId is required" });
+        }
+
+        const log = await FuelingLog.findById(logId);
+
+        if (!log) {
+            return res.status(404).json({ message: "Fueling log not found" });
+        }
+
+        await FuelingLog.findByIdAndDelete(logId);
+
+        return res.status(200).json({ message: "Fueling log deleted successfully" });
+
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+}
 };
