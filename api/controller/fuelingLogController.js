@@ -83,7 +83,8 @@ module.exports = {
     deleteFuelingLog: async (req, res) => {
         try {
             const { firebaseUid } = req.body;
-
+            console.log(firebaseUid);
+            
             if (!firebaseUid) {
                 return res.status(400).json({ message: "firebaseUid is required" });
             }
@@ -92,10 +93,12 @@ module.exports = {
             if (!user) {
                 return res.status(404).json({ message: "User does not exist" });
             }
-
+            console.log(user);
+            
             // מחיקה של הלוג של המשתמש (אם קיים)
             const result = await FuelingLog.findOneAndDelete({ user_ref: user._id });
-
+            console.log(result);
+            
             if (!result) {
                 return res.status(404).json({ message: "No fueling log found for this user" });
             }
