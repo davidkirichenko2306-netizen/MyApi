@@ -82,31 +82,34 @@ module.exports = {
     },
     deleteFuelingLog: async (req, res) => {
         try {
-            const { firebaseUid } = req.body;
-            console.log(firebaseUid);
-            
-            if (!firebaseUid) {
-                return res.status(400).json({ message: "firebaseUid is required" });
+
+            const { logId } = req.body;
+            console.log("logId:", logId);
+
+            if (!logId) {
+                return res.status(400).json({
+                    message: "logId is required"
+                });
             }
 
-            const user = await User.findOne({ firebaseUid });
-            if (!user) {
-                return res.status(404).json({ message: "User does not exist" });
-            }
-            console.log(user);
-            
-            // מחיקה של הלוג של המשתמש (אם קיים)
-            const result = await FuelingLog.findOneAndDelete({ user_ref: user._id });
-            console.log(result);
-            
+            const result = await FuelingLog.findByIdAndDelete(logId);
+
+            console.log("deleted:", result);
+
             if (!result) {
-                return res.status(404).json({ message: "No fueling log found for this user" });
+                return res.status(404).json({
+                    message: "Fueling log not found"
+                });
             }
 
-            return res.status(200).json({ message: "Fueling log deleted successfully" });
+            return res.status(200).json({
+                message: "Fueling log deleted successfully"
+            });
 
         } catch (err) {
-            return res.status(500).json({ message: err.message });
+            return res.status(500).json({
+                message: err.message
+            });
         }
     }
 };
