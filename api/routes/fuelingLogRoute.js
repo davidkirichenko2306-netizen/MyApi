@@ -6,7 +6,7 @@ const {getOrCreateUser } = require("../controller/userController");
 const { getOrCreateUserFromBody } = require("../controller/userController");
 
 
-const verifyFirebaseToken = require('../middleware/middleware');
+const verifyFirebaseToken = require('../middleware');
 
 // אם אתה שולח דרך URL
 router.post("/", verifyFirebaseToken, createFuelingLog);
