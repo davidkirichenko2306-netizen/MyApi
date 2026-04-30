@@ -6,6 +6,19 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
+// 🔥 Firebase Admin
+const admin = require("firebase-admin");
+
+// Decode Base64 service account
+const serviceAccount = JSON.parse(
+  Buffer.from(process.env.FIREBASE_ADMIN_BASE64, "base64").toString("utf8")
+);
+
+// Init Firebase Admin
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 const uri = process.env.MONGO_STR;
 
 async function connectDB() {
@@ -20,23 +33,17 @@ async function connectDB() {
 
 connectDB();
 
-
-// Enable CORS for all routes
+// Middleware
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-
+// Static
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.json()); // Parse request body JSON
-app.use(bodyParser.urlencoded({ extended: true })); // Parse request body
 
-
+// Routes
 const FuelingLogRouter = require("./api/routes/fuelingLogRoute");
 app.use("/logs", FuelingLogRouter);
-
-
-
-
-
 
 module.exports = app;
