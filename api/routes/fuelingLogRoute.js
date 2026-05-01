@@ -4,7 +4,8 @@ const router = express.Router();
 const {
     createFuelingLog,
     deleteFuelingLog,
-    getFuelingLogsByUser
+    getFuelingLogsByUser,
+     updateFuelingLog
 } = require("../controller/fuelingLogController");
 
 const {
@@ -38,6 +39,7 @@ router.get("/logs", verifyFirebaseToken, getFuelingLogsByUser);
 
 // מחיקת תדלוק (מאובטח לפי בעלות)
 router.delete("/logs/:logId", verifyFirebaseToken, deleteFuelingLog);
-
+// עדכון תדלוק (מאובטח לפי בעלות)
+router.put("/logs/:logId", verifyFirebaseToken, updateFuelingLog);
 
 module.exports = router;

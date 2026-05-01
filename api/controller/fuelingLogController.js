@@ -118,3 +118,62 @@ module.exports.deleteFuelingLog = async (req, res) => {
         });
     }
 };
+// =========================
+// ✏️ UPDATE FUELING LOG
+// =========================
+module.exports.updateFuelingLog = async (req, res) => {
+    try {
+
+        const firebaseUid = req.user.uid;
+        const { logId } = req.params;
+
+        const {
+            placeName,
+            pricePerLiter,
+            lat,
+            lng,
+            date,
+            fuelType,
+            img
+        } = req.body;
+
+        // מציאת המשתמש לפי Firebase UID
+        const user = await User.findOne({ firebaseUid });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User does not exist"
+            });
+        }
+
+        // בדיקה שהלוג שייך למשתמש
+        const existingLog = await FuelingLog.findOne({
+            _id: logId,
+            user_ref: user._id
+        });
+
+        if (!existingLog) {
+            return res.status(404).json({
+                message: "Fueling log not found or not owned by user"
+            });
+        }
+
+        // עדכון שדות (רק מה שנשלח בפועל)
+        existingLog.placeName = placeName ?? existingLog.placeName;
+        existingLog.pricePerLiter = pricePerLiter ?? existingLog.pricePerLiter;
+        existingLog.lat = lat ?? existingLog.lat;
+        existingLog.lng = lng ?? existingLog.lng;
+        existingLog.date = date ?? existingLog.date;
+        existingLog.fuelType = fuelType ?? existingLog.fuelType;
+        existingLog.img = img ?? existingLog.img;
+
+        await existingLog.save();
+
+        return res.status(200).json(existingLog);
+
+    } catch (err) {
+        return res.status(500).json({
+            message: err.message
+        });
+    }
+};
