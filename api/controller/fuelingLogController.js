@@ -209,7 +209,7 @@ module.exports.getCheapestFuelingPerUser = async (req, res) => {
             {
                 $project: {
                     _id: 0,
-                    userName: "$user.name", // או username / displayName לפי המודל שלך
+                    userName: "$user.userName", // או username / displayName לפי המודל שלך
                     cheapestFuelingLog: "$cheapestLog"
                 }
             }
