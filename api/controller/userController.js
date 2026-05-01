@@ -1,126 +1,64 @@
 const User = require("../model/user");
 
-// יצירה או סנכרון משתמש (Firebase → MongoDB)
-module.exports.getOrCreateUser = async (req, res) => {
+
+// =========================
+// 🔐 SYNC USER (create / update)
+// =========================
+module.exports.syncUser = async (req, res) => {
     try {
-        const { firebaseUid } = req.params;
-        const { email, userName, phoneNumber, isGuest } = req.body;
+        const { uid, email } = req.user;
+        const { userName, phoneNumber, img } = req.body;
 
-        if (!firebaseUid) {
-            return res.status(400).json({
-                message: "firebaseUid is required"
-            });
-        }
+        let user = await User.findOne({ firebaseUid: uid });
 
-        let user = await User.findOne({ firebaseUid });
-
-        // אם לא קיים → יצירה
+        // יצירה אם לא קיים
         if (!user) {
             user = new User({
-                firebaseUid,
+                firebaseUid: uid,
                 email: email || "",
                 userName: userName || "",
                 phoneNumber: phoneNumber || "",
-                isGuest: isGuest || false
+                img: img || "",
+                isGuest: false
             });
 
             await user.save();
-
             return res.status(201).json(user);
         }
 
-        // אם קיים → עדכון (sync קל מהלקוח)
-        user.email = email || user.email;
+        // עדכון אם קיים
         user.userName = userName || user.userName;
         user.phoneNumber = phoneNumber || user.phoneNumber;
-        user.isGuest = isGuest ?? user.isGuest;
+        user.img = img || user.img;
 
         await user.save();
 
         return res.status(200).json(user);
 
-    } catch (error) {
-        return res.status(500).json({
-            message: "Server error",
-            error: error.message
-        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
 };
-module.exports.getOrCreateUserFromBody = async (req, res) => {
+
+
+// =========================
+// 👤 GET CURRENT USER
+// =========================
+module.exports.getMe = async (req, res) => {
     try {
-        const { id, email, userName, phoneNumber } = req.body;
+        const { uid } = req.user;
 
-        if (!id) {
-            return res.status(400).json({ message: "id is required" });
-        }
+        const user = await User.findOne({ firebaseUid: uid });
 
-        let user = await User.findOne({ firebaseUid: id });
-
-        // אם לא קיים → יצירה
         if (!user) {
-            user = new User({
-                firebaseUid: id,
-                email: email || "",
-                userName: userName || "",
-                phoneNumber: phoneNumber || ""
+            return res.status(404).json({
+                message: "User not found"
             });
-
-            await user.save();
-            return res.status(201).json(user);
         }
-
-        // אם קיים → עדכון
-        user.email = email || user.email;
-        user.userName = userName || user.userName;
-        user.phoneNumber = phoneNumber || user.phoneNumber;
-
-        await user.save();
 
         return res.status(200).json(user);
 
-    } catch (error) {
-        return res.status(500).json({
-            message: "Server error",
-            error: error.message
-        });
-    }
-};// userController.js - עדכון הפונקציה
-module.exports.getOrCreateUserFromBody = async (req, res) => {
-    try {
-        // הוספנו בדיקה גם ל-id (מה-Java) וגם ל-firebaseUid
-        const { id, firebaseUid, email, userName, phoneNumber } = req.body;
-        const uidToUse = id || firebaseUid; 
-
-        if (!uidToUse) {
-            return res.status(400).json({ message: "User UID (id/firebaseUid) is required" });
-        }
-
-        let user = await User.findOne({ firebaseUid: uidToUse });
-
-        if (!user) {
-            user = new User({
-                firebaseUid: uidToUse,
-                email: email || "",
-                userName: userName || "",
-                phoneNumber: phoneNumber || ""
-            });
-            await user.save();
-            return res.status(201).json(user);
-        }
-
-        // עדכון פרטים אם המשתמש קיים
-        user.email = email || user.email;
-        user.userName = userName || user.userName;
-        user.phoneNumber = phoneNumber || user.phoneNumber;
-
-        await user.save();
-        return res.status(200).json(user);
-
-    } catch (error) {
-        console.error("Error in getOrCreateUserFromBody:", error);
-        return res.status(500).json({
-            message: "Server error",
-            error: error.message
-        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
 };

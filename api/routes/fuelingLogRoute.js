@@ -1,20 +1,43 @@
 const express = require("express");
 const router = express.Router();
 
-const { createFuelingLog,deleteFuelingLog, getFuelingLogsByUser } = require("../controller/fuelingLogController");
-const {getOrCreateUser } = require("../controller/userController");
-const { getOrCreateUserFromBody } = require("../controller/userController");
+const {
+    createFuelingLog,
+    deleteFuelingLog,
+    getFuelingLogsByUser
+} = require("../controller/fuelingLogController");
+
+const {
+    syncUser,
+    getMe
+} = require("../controller/userController");
+
+const verifyFirebaseToken = require("../middleware");
 
 
-const verifyFirebaseToken = require('../middleware');
+// =========================
+// 👤 USER ROUTES
+// =========================
 
-// אם אתה שולח דרך URL
-router.post("/", verifyFirebaseToken, createFuelingLog);
+// קבלת המשתמש המחובר
+router.get("/users/me", verifyFirebaseToken, getMe);
 
-router.get("/:firebaseUid", verifyFirebaseToken, getFuelingLogsByUser);
+// יצירה / עדכון משתמש (סנכרון)
+router.post("/users/sync", verifyFirebaseToken, syncUser);
 
-router.post("/delete", verifyFirebaseToken, deleteFuelingLog);
 
-router.get("/users/:firebaseUid", verifyFirebaseToken, getOrCreateUser);
-router.post("/users/createOrUpdate", verifyFirebaseToken, getOrCreateUserFromBody);
+// =========================
+// ⛽ FUELING LOG ROUTES
+// =========================
+
+// יצירת תדלוק
+router.post("/logs", verifyFirebaseToken, createFuelingLog);
+
+// קבלת כל התדלוקים של המשתמש המחובר
+router.get("/logs", verifyFirebaseToken, getFuelingLogsByUser);
+
+// מחיקת תדלוק (מאובטח לפי בעלות)
+router.delete("/logs/:logId", verifyFirebaseToken, deleteFuelingLog);
+
+
 module.exports = router;
