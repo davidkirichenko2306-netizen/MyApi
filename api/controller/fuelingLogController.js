@@ -87,7 +87,7 @@ module.exports.deleteFuelingLog = async (req, res) => {
     try {
 
         const firebaseUid = req.user.uid;
-        const { logId } = req.body;
+       const { logId } = req.params;
 
         if (!logId) {
             return res.status(400).json({
