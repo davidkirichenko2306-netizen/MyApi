@@ -177,3 +177,49 @@ module.exports.updateFuelingLog = async (req, res) => {
         });
     }
 };
+module.exports.getCheapestFuelingPerUser = async (req, res) => {
+    try {
+
+        const result = await FuelingLog.aggregate([
+            // 1. מיון לפי מחיר מהנמוך לגבוה
+            { $sort: { pricePerLiter: 1 } },
+
+            // 2. קיבוץ לפי משתמש → הראשון בכל קבוצה הוא הכי זול
+            {
+                $group: {
+                    _id: "$user_ref",
+                    cheapestLog: { $first: "$$ROOT" }
+                }
+            },
+
+            // 3. חיבור לטבלת users כדי לקבל שם
+            {
+                $lookup: {
+                    from: "users", // שם הקולקשן במונגו (שימו לב שזה לפעמים "users")
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+
+            // 4. פתיחת המערך של user
+            { $unwind: "$user" },
+
+            // 5. עיצוב הפלט
+            {
+                $project: {
+                    _id: 0,
+                    userName: "$user.name", // או username / displayName לפי המודל שלך
+                    cheapestFuelingLog: "$cheapestLog"
+                }
+            }
+        ]);
+
+        return res.status(200).json(result);
+
+    } catch (err) {
+        return res.status(500).json({
+            message: err.message
+        });
+    }
+};

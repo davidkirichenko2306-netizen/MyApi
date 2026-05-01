@@ -5,7 +5,8 @@ const {
     createFuelingLog,
     deleteFuelingLog,
     getFuelingLogsByUser,
-     updateFuelingLog
+     updateFuelingLog,
+        getCheapestFuelingPerUser
 } = require("../controller/fuelingLogController");
 
 const {
@@ -41,5 +42,9 @@ router.get("/logs", verifyFirebaseToken, getFuelingLogsByUser);
 router.delete("/logs/:logId", verifyFirebaseToken, deleteFuelingLog);
 // עדכון תדלוק (מאובטח לפי בעלות)
 router.put("/logs/:logId", verifyFirebaseToken, updateFuelingLog);
+
+
+// קבלת התדלוק הכי זול לכל משתמש
+router.get("/logs/cheapest-per-user", verifyFirebaseToken, getCheapestFuelingPerUser);
 
 module.exports = router;
