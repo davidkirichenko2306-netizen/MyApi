@@ -3,56 +3,36 @@ const User = require("../model/user");
 
 
 // =========================
-// ⛽ CREATE FUELING LOG
+// ⛽ CREATE LOG
 // =========================
 module.exports.createFuelingLog = async (req, res) => {
     try {
 
         const firebaseUid = req.user.uid;
 
-        const {
-            placeName,
-            pricePerLiter,
-            lat,
-            lng,
-            date,
-            fuelType,
-            img
-        } = req.body;
-
         const user = await User.findOne({ firebaseUid });
 
         if (!user) {
-            return res.status(404).json({
-                message: "User does not exist"
-            });
+            return res.status(404).json({ message: "User does not exist" });
         }
 
-        const fuelingLog = new FuelingLog({
+        const log = new FuelingLog({
             user_ref: user._id,
-            placeName,
-            pricePerLiter,
-            lat,
-            lng,
-            date,
-            fuelType,
-            img
+            ...req.body
         });
 
-        await fuelingLog.save();
+        await log.save();
 
-        return res.status(201).json(fuelingLog);
+        return res.status(201).json(log);
 
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return res.status(500).json({ message: err.message });
     }
 };
 
 
 // =========================
-// 📜 GET USER FUELING LOGS
+// 📜 GET USER LOGS
 // =========================
 module.exports.getFuelingLogsByUser = async (req, res) => {
     try {
@@ -62,9 +42,7 @@ module.exports.getFuelingLogsByUser = async (req, res) => {
         const user = await User.findOne({ firebaseUid });
 
         if (!user) {
-            return res.status(404).json({
-                message: "User does not exist"
-            });
+            return res.status(404).json({ message: "User does not exist" });
         }
 
         const logs = await FuelingLog.find({ user_ref: user._id })
@@ -73,53 +51,41 @@ module.exports.getFuelingLogsByUser = async (req, res) => {
         return res.status(200).json(logs);
 
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return res.status(500).json({ message: err.message });
     }
 };
 
 
 // =========================
-// 🗑 DELETE FUELING LOG (SAFE)
+// 🗑 DELETE LOG
 // =========================
 module.exports.deleteFuelingLog = async (req, res) => {
     try {
 
         const firebaseUid = req.user.uid;
-       const { logId } = req.params;
-
-        if (!logId) {
-            return res.status(400).json({
-                message: "logId is required"
-            });
-        }
+        const { logId } = req.params;
 
         const user = await User.findOne({ firebaseUid });
 
-        const deletedLog = await FuelingLog.findOneAndDelete({
+        const deleted = await FuelingLog.findOneAndDelete({
             _id: logId,
             user_ref: user._id
         });
 
-        if (!deletedLog) {
-            return res.status(404).json({
-                message: "Fueling log not found or not owned by user"
-            });
+        if (!deleted) {
+            return res.status(404).json({ message: "Not found or not owned" });
         }
 
-        return res.status(200).json({
-            message: "Fueling log deleted successfully"
-        });
+        return res.status(200).json({ message: "Deleted successfully" });
 
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return res.status(500).json({ message: err.message });
     }
 };
+
+
 // =========================
-// ✏️ UPDATE FUELING LOG
+// ✏️ UPDATE LOG
 // =========================
 module.exports.updateFuelingLog = async (req, res) => {
     try {
@@ -127,89 +93,56 @@ module.exports.updateFuelingLog = async (req, res) => {
         const firebaseUid = req.user.uid;
         const { logId } = req.params;
 
-        const {
-            placeName,
-            pricePerLiter,
-            lat,
-            lng,
-            date,
-            fuelType,
-            img
-        } = req.body;
-
-        // מציאת המשתמש לפי Firebase UID
         const user = await User.findOne({ firebaseUid });
 
-        if (!user) {
-            return res.status(404).json({
-                message: "User does not exist"
-            });
-        }
-
-        // בדיקה שהלוג שייך למשתמש
-        const existingLog = await FuelingLog.findOne({
+        const log = await FuelingLog.findOne({
             _id: logId,
             user_ref: user._id
         });
 
-        if (!existingLog) {
-            return res.status(404).json({
-                message: "Fueling log not found or not owned by user"
-            });
+        if (!log) {
+            return res.status(404).json({ message: "Not found or not owned" });
         }
 
-        // עדכון שדות (רק מה שנשלח בפועל)
-        existingLog.placeName = placeName ?? existingLog.placeName;
-        existingLog.pricePerLiter = pricePerLiter ?? existingLog.pricePerLiter;
-        existingLog.lat = lat ?? existingLog.lat;
-        existingLog.lng = lng ?? existingLog.lng;
-        existingLog.date = date ?? existingLog.date;
-        existingLog.fuelType = fuelType ?? existingLog.fuelType;
-        existingLog.img = img ?? existingLog.img;
+        Object.assign(log, req.body);
 
-        await existingLog.save();
+        await log.save();
 
-        return res.status(200).json(existingLog);
+        return res.status(200).json(log);
 
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return res.status(500).json({ message: err.message });
     }
 };
+
+
+// =========================
+// 🏆 CHEAPEST PER USER
+// =========================
 module.exports.getCheapestFuelingPerUser = async (req, res) => {
     try {
 
         const result = await FuelingLog.aggregate([
-            // 1. מיון לפי מחיר מהנמוך לגבוה
             { $sort: { pricePerLiter: 1 } },
-
-            // 2. קיבוץ לפי משתמש → הראשון בכל קבוצה הוא הכי זול
             {
                 $group: {
                     _id: "$user_ref",
                     cheapestLog: { $first: "$$ROOT" }
                 }
             },
-
-            // 3. חיבור לטבלת users כדי לקבל שם
             {
                 $lookup: {
-                    from: "users", // שם הקולקשן במונגו (שימו לב שזה לפעמים "users")
+                    from: "users",
                     localField: "_id",
                     foreignField: "_id",
                     as: "user"
                 }
             },
-
-            // 4. פתיחת המערך של user
             { $unwind: "$user" },
-
-            // 5. עיצוב הפלט
             {
                 $project: {
                     _id: 0,
-                    userName: "$user.userName", // או username / displayName לפי המודל שלך
+                    userName: "$user.userName",
                     cheapestFuelingLog: "$cheapestLog"
                 }
             }
@@ -218,8 +151,27 @@ module.exports.getCheapestFuelingPerUser = async (req, res) => {
         return res.status(200).json(result);
 
     } catch (err) {
-        return res.status(500).json({
-            message: err.message
-        });
+        return res.status(500).json({ message: err.message });
+    }
+};
+
+
+// =========================
+// 🌍 PUBLIC: latest cheapest
+// =========================
+module.exports.getLatestCheapestFueling = async (req, res) => {
+    try {
+
+        const result = await FuelingLog.aggregate([
+            { $sort: { date: -1 } },
+            { $limit: 5 },
+            { $sort: { pricePerLiter: 1 } },
+            { $limit: 1 }
+        ]);
+
+        return res.status(200).json(result[0] || null);
+
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
     }
 };

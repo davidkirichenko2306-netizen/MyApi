@@ -5,9 +5,9 @@ const {
     createFuelingLog,
     deleteFuelingLog,
     getFuelingLogsByUser,
-     updateFuelingLog,
-        getCheapestFuelingPerUser , 
-        getLatestCheapestFueling 
+    updateFuelingLog,
+    getCheapestFuelingPerUser,
+    getLatestCheapestFueling
 } = require("../controller/fuelingLogController");
 
 const {
@@ -17,37 +17,32 @@ const {
 
 const verifyFirebaseToken = require("../middleware");
 
+
+// =========================
+// 🌍 PUBLIC ROUTES (NO AUTH)
+// =========================
 router.get("/logs/latest-cheapest", getLatestCheapestFueling);
 
 
 // =========================
-// 👤 USER ROUTES
+// 👤 USER ROUTES (AUTH)
 // =========================
-
-// קבלת המשתמש המחובר
 router.get("/users/me", verifyFirebaseToken, getMe);
-
-// יצירה / עדכון משתמש (סנכרון)
 router.post("/users/sync", verifyFirebaseToken, syncUser);
 
 
 // =========================
-// ⛽ FUELING LOG ROUTES
+// ⛽ FUELING LOGS (AUTH)
 // =========================
-
-// יצירת תדלוק
 router.post("/logs", verifyFirebaseToken, createFuelingLog);
 
-// קבלת כל התדלוקים של המשתמש המחובר
 router.get("/logs", verifyFirebaseToken, getFuelingLogsByUser);
 
-// מחיקת תדלוק (מאובטח לפי בעלות)
 router.delete("/logs/:logId", verifyFirebaseToken, deleteFuelingLog);
-// עדכון תדלוק (מאובטח לפי בעלות)
+
 router.put("/logs/:logId", verifyFirebaseToken, updateFuelingLog);
 
-
-// קבלת התדלוק הכי זול לכל משתמש
 router.get("/logs/cheapest-per-user", verifyFirebaseToken, getCheapestFuelingPerUser);
+
 
 module.exports = router;
