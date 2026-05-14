@@ -6,7 +6,8 @@ const {
     deleteFuelingLog,
     getFuelingLogsByUser,
      updateFuelingLog,
-        getCheapestFuelingPerUser
+        getCheapestFuelingPerUser , 
+        getLatestCheapestFueling 
 } = require("../controller/fuelingLogController");
 
 const {
@@ -15,6 +16,8 @@ const {
 } = require("../controller/userController");
 
 const verifyFirebaseToken = require("../middleware");
+
+router.get("/logs/latest-cheapest", getLatestCheapestFueling);
 
 
 // =========================
